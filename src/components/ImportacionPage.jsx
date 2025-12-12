@@ -1,805 +1,330 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
-  Container,
-  Typography,
-  TextField,
-  Grid,
-  Paper,
-  Divider,
-  Button,
-  ButtonGroup,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  Box,
-  Card,
-  CardContent,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
-import {
-  AttachMoney,
-  Calculate,
-  ExpandMore,
-  Description,
-  CloudDownload,
-  LocalShipping,
-  Security,
-  Inventory,
-  Straighten,
-  Percent,
-} from "@mui/icons-material";
+  Users,
+  Package,
+  Shirt,
+  Cpu,
+  Zap,
+  ChevronDown,
+  Send,
+  CheckCircle,
+  TrendingDown,
+  Shield,
+} from "lucide-react";
 
-function formatMoney(n) {
-  return Number(n || 0).toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-  });
-}
+const GruposImportacionColectiva = ({ id }) => {
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
-function round2(x) {
-  return Math.round((x + Number.EPSILON) * 100) / 100;
-}
+  const categories = [
+    {
+      id: "telas",
+      name: "Telas y Textiles",
+      icon: Shirt,
+      description: "Telas, tejidos, hilos y materiales textiles de todo tipo",
+      whatsappLink:
+        "https://chat.whatsapp.com/FFU8GIUYMx52LDotKfUpao?mode=hqrt1",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-300",
+      examples: ["Algodón", "Poliéster", "Jersey", "Denim", "Telas técnicas"],
+    },
+    {
+      id: "ropa",
+      name: "Ropa Confeccionada",
+      icon: Package,
+      description: "Prendas terminadas, accesorios y productos de indumentaria",
+      whatsappLink:
+        "https://chat.whatsapp.com/BPmzGHnXWRP5YDsPeBXEaq?mode=hqrt1",
+      color: "from-purple-600 to-purple-500",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-300",
+      examples: [
+        "Remeras",
+        "Pantalones",
+        "Buzos",
+        "Ropa deportiva",
+        "Accesorios",
+      ],
+    },
+    {
+      id: "maquinas",
+      name: "Maquinaria Textil",
+      icon: Zap,
+      description:
+        "Máquinas de coser, bordadoras, cortadoras y equipamiento industrial",
+      whatsappLink:
+        "https://chat.whatsapp.com/DgUGfQP1kqoLeTNIw2zAMp?mode=hqrt1",
+      color: "from-green-600 to-green-500",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-300",
+      examples: [
+        "Rectas",
+        "Overlock",
+        "Bordadoras",
+        "Cortadoras láser",
+        "Planchas industriales",
+      ],
+    },
+    {
+      id: "electronica",
+      name: "Electrónica y Tecnología",
+      icon: Cpu,
+      description:
+        "Componentes electrónicos, dispositivos y tecnología para producción",
+      whatsappLink:
+        "https://chat.whatsapp.com/LUiLNpFGu0bFoPOgzhSLiK?mode=hqrt1",
+      color: "from-orange-600 to-orange-500",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-300",
+      examples: [
+        "Electrodomesticos",
+        "Impresoras",
+        "Software",
+        "Componentes",
+        "Sensores",
+      ],
+    },
+  ];
 
-function calcular(input) {
-  const {
-    cantidadProductos,
-    precioUnitario,
-    metrosCubicos,
-    fletePorMetro,
-    seguroPct,
-    derechoPct,
-    tasaEstPct,
-    ivaPct,
-    percIvaPct,
-    percGanPct,
-    percIibbPct,
-    digitalizacion,
-    gastosOper,
-    honorarios,
-    certificaciones,
-    unidades,
-    multiplicador,
-    precioVentaManual,
-    unidadesMes,
-    dumpingPct,
-    valorCriterio,
-    tributosExtra,
-  } = input;
+  // Manejar la selección y redirección
+  const handleJoinGroup = () => {
+    if (!selectedCategory) return;
 
-  const fob = cantidadProductos * precioUnitario;
-  const flete = metrosCubicos * fletePorMetro;
-  const seguro = fob * (seguroPct / 100);
-
-  const cif = fob + flete + seguro;
-  const derecho = cif * derechoPct;
-  const tasaEst = cif * tasaEstPct;
-
-  const baseParaTributos =
-    valorCriterio && valorCriterio > 0
-      ? valorCriterio
-      : cif + derecho + tasaEst;
-
-  const iva = baseParaTributos * ivaPct;
-  const percIVA = baseParaTributos * percIvaPct;
-  const percGan = baseParaTributos * percGanPct;
-  const percIIBB = baseParaTributos * percIibbPct;
-
-  const dumping = baseParaTributos * dumpingPct;
-  const extras = tributosExtra || 0;
-
-  const total =
-    fob +
-    flete +
-    seguro +
-    derecho +
-    tasaEst +
-    iva +
-    percIVA +
-    percGan +
-    percIIBB +
-    digitalizacion +
-    gastosOper +
-    honorarios +
-    certificaciones +
-    dumping +
-    extras;
-
-  const creditoRI = iva + percIVA + percGan;
-  const costoFinalRI = total - creditoRI;
-  const costoFinalMono = total;
-
-  const costoUnitRI = unidades > 0 ? costoFinalRI / unidades : costoFinalRI;
-  const costoUnitMono =
-    unidades > 0 ? costoFinalMono / unidades : costoFinalMono;
-
-  const precioSugeridoSinIVA =
-    precioVentaManual && precioVentaManual > 0
-      ? precioVentaManual
-      : costoUnitRI * multiplicador;
-  const precioSugeridoConIVA = precioSugeridoSinIVA * (1 + ivaPct);
-
-  const debitoMensual = precioSugeridoSinIVA * ivaPct * unidadesMes;
-  const mesesAbsorcion =
-    debitoMensual > 0 ? Math.ceil(creditoRI / debitoMensual) : null;
-
-  return {
-    fob,
-    flete,
-    seguro,
-    cif,
-    derecho,
-    tasaEst,
-    baseParaTributos,
-    iva,
-    percIVA,
-    percGan,
-    percIIBB,
-    dumping,
-    extras,
-    total,
-    creditoRI,
-    costoFinalRI,
-    costoFinalMono,
-    costoUnitRI,
-    costoUnitMono,
-    precioSugeridoSinIVA,
-    precioSugeridoConIVA,
-    debitoMensual,
-    mesesAbsorcion,
-  };
-}
-
-function NumberField({
-  label,
-  value,
-  onChange,
-  step = 0.01,
-  note,
-  icon,
-  adornment,
-  ...props
-}) {
-  return (
-    <TextField
-      label={label}
-      type="number"
-      variant="outlined"
-      size="small"
-      fullWidth
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value || 0))}
-      InputProps={{
-        startAdornment: icon && (
-          <InputAdornment position="start">{icon}</InputAdornment>
-        ),
-        endAdornment: adornment && (
-          <InputAdornment position="end">{adornment}</InputAdornment>
-        ),
-        inputProps: { step },
-      }}
-      helperText={note}
-      {...props}
-    />
-  );
-}
-
-function SectionTitle({ icon, title, subtitle }) {
-  return (
-    <Box mb={3}>
-      <Box display="flex" alignItems="center" mb={1}>
-        {icon}
-        <Typography variant="h5" component="h2" ml={1}>
-          {title}
-        </Typography>
-      </Box>
-      {subtitle && (
-        <Typography variant="body2" color="textSecondary">
-          {subtitle}
-        </Typography>
-      )}
-    </Box>
-  );
-}
-
-export default function ImportCalculator() {
-  const [input, setInput] = useState({
-    cantidadProductos: 200,
-    precioUnitario: 51.5,
-    metrosCubicos: 5.15,
-    fletePorMetro: 400,
-    seguroPct: 1,
-    derechoPct: 0.2,
-    tasaEstPct: 0.03,
-    ivaPct: 0.21,
-    percIvaPct: 0.2,
-    percGanPct: 0.06,
-    percIibbPct: 0.03,
-    digitalizacion: 30,
-    gastosOper: 400,
-    honorarios: 450,
-    certificaciones: 350,
-    unidades: 200,
-    multiplicador: 1.3,
-    precioVentaManual: 0,
-    unidadesMes: 50,
-    dumpingPct: 0,
-    valorCriterio: 0,
-    tributosExtra: 0,
-  });
-
-  const data = useMemo(() => calcular(input), [input]);
-
-  function setField(k) {
-    return (v) => setInput((s) => ({ ...s, [k]: v }));
-  }
-
-  const handleMultiplierPreset = (m) => {
-    setInput((s) => ({ ...s, multiplicador: m }));
-  };
-
-  const handleExport = () => {
-    const rows = [];
-    rows.push(["Campo", "Valor"]);
-    Object.entries(input).forEach(([k, v]) => rows.push([k, String(v)]));
-    rows.push([]);
-    Object.entries(data).forEach(([k, v]) => rows.push([k, String(v)]));
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "resultado_importacion.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    const category = categories.find((cat) => cat.id === selectedCategory);
+    if (category) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        window.open(category.whatsappLink, "_blank");
+        setShowSuccess(false);
+      }, 1500);
+    }
   };
 
   return (
-    <Container maxWidth="lg" sx={{ my: 4 }}>
-      <Box display="flex" alignItems="center" mb={3}>
-        <Calculate fontSize="large" color="primary" />
-        <Typography variant="h4" component="h1" ml={1}>
-          Calculadora de Importación
-        </Typography>
-      </Box>
+    <section
+      id={id}
+      className="py-16 px-4 md:px-8 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100"
+    >
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <span className="inline-block bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full px-6 py-2 text-sm font-bold uppercase tracking-wider mb-4 shadow-lg">
+            Importación Colectiva
+          </span>
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            Importá en{" "}
+            <span className="bg-gradient-to-r from-blue-600 via-sky-500 to-blue-700 text-transparent bg-clip-text">
+              Grupo
+            </span>{" "}
+            y Ahorrá
+          </h2>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+            Únete a grupos de WhatsApp con personas que importan los mismos
+            productos. Compartí costos de contenedor, flete y despacho para
+            reducir gastos significativamente.
+          </p>
+        </div>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <SectionTitle
-              icon={<Inventory color="primary" />}
-              title="Datos de la Importación"
-              subtitle="Complete los detalles de su importación"
-            />
+        {/* Beneficios de importar en grupo */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-100 text-center">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-500 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <TrendingDown className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Reduce Costos
+            </h3>
+            <p className="text-gray-600">
+              Compartí gastos de contenedor, flete internacional y despacho
+              aduanero
+            </p>
+          </div>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Cantidad de productos"
-                  value={input.cantidadProductos}
-                  onChange={setField("cantidadProductos")}
-                  step={1}
-                  icon={<Straighten />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Precio unitario (USD)"
-                  value={input.precioUnitario}
-                  onChange={setField("precioUnitario")}
-                  icon={<AttachMoney />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Metros cúbicos totales"
-                  value={input.metrosCubicos}
-                  onChange={setField("metrosCubicos")}
-                  icon={<Straighten />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Flete por m³ (USD)"
-                  value={input.fletePorMetro}
-                  onChange={setField("fletePorMetro")}
-                  icon={<LocalShipping />}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Seguro internacional (%)"
-                  value={input.seguroPct}
-                  onChange={setField("seguroPct")}
-                  icon={<Security />}
-                  adornment="%"
-                />
-              </Grid>
-            </Grid>
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-sky-100 text-center">
+            <div className="bg-gradient-to-br from-sky-600 to-sky-500 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Red de Contactos
+            </h3>
+            <p className="text-gray-600">
+              Conectá con otros importadores del mismo rubro y compartí
+              experiencias
+            </p>
+          </div>
 
-            <Divider sx={{ my: 3 }} />
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-100 text-center">
+            <div className="bg-gradient-to-br from-blue-700 to-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Menor Riesgo
+            </h3>
+            <p className="text-gray-600">
+              Compartí conocimiento sobre proveedores, NCM y procesos aduaneros
+            </p>
+          </div>
+        </div>
 
-            <SectionTitle
-              icon={<Description color="primary" />}
-              title="Tributos e Impuestos"
-            />
+        {/* Selector de categoría */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 border-2 border-blue-100 mb-8">
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              Seleccioná la Categoría de tu Interés
+            </h3>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="Derecho de importación (%)"
-                  value={input.derechoPct}
-                  onChange={setField("derechoPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="Tasa estadística (%)"
-                  value={input.tasaEstPct}
-                  onChange={setField("tasaEstPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="IVA (%)"
-                  value={input.ivaPct}
-                  onChange={setField("ivaPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="Percepción IVA (%)"
-                  value={input.percIvaPct}
-                  onChange={setField("percIvaPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="Percepción Ganancias (%)"
-                  value={input.percGanPct}
-                  onChange={setField("percGanPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <NumberField
-                  label="Percepción IIBB (%)"
-                  value={input.percIibbPct}
-                  onChange={setField("percIibbPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Dumping (si aplica, %)"
-                  value={input.dumpingPct}
-                  onChange={setField("dumpingPct")}
-                  step={0.01}
-                  adornment="%"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Valor criterio (si aplica)"
-                  value={input.valorCriterio}
-                  onChange={setField("valorCriterio")}
-                />
-              </Grid>
-            </Grid>
+            {/* Dropdown personalizado */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                ¿Qué tipo de productos querés importar?
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-xl appearance-none cursor-pointer focus:border-blue-500 focus:outline-none bg-white"
+                >
+                  <option value="">-- Selecciona una categoría --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
 
-            <Divider sx={{ my: 3 }} />
+            {/* Mostrar detalles de la categoría seleccionada */}
+            {selectedCategory && (
+              <div className="animate-fadeIn">
+                {categories.map((cat) => {
+                  if (cat.id !== selectedCategory) return null;
+                  const IconComponent = cat.icon;
 
-            <SectionTitle
-              icon={<AttachMoney color="primary" />}
-              title="Otros Gastos"
-            />
+                  return (
+                    <div
+                      key={cat.id}
+                      className={`${cat.bgColor} border-2 ${cat.borderColor} rounded-2xl p-6 mb-6`}
+                    >
+                      <div className="flex items-start gap-4 mb-4">
+                        <div
+                          className={`bg-gradient-to-br ${cat.color} rounded-xl p-3`}
+                        >
+                          <IconComponent className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-xl font-bold text-gray-900 mb-2">
+                            {cat.name}
+                          </h4>
+                          <p className="text-gray-700 mb-4">
+                            {cat.description}
+                          </p>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <NumberField
-                  label="Digitalización (USD)"
-                  value={input.digitalizacion}
-                  onChange={setField("digitalizacion")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <NumberField
-                  label="Gastos operativos (USD)"
-                  value={input.gastosOper}
-                  onChange={setField("gastosOper")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <NumberField
-                  label="Honorarios (USD)"
-                  value={input.honorarios}
-                  onChange={setField("honorarios")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <NumberField
-                  label="Certificaciones (USD)"
-                  value={input.certificaciones}
-                  onChange={setField("certificaciones")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Tributos extra (USD)"
-                  value={input.tributosExtra}
-                  onChange={setField("tributosExtra")}
-                />
-              </Grid>
-            </Grid>
+                          <div className="bg-white rounded-lg p-4 border border-gray-200">
+                            <p className="text-sm font-semibold text-gray-700 mb-2">
+                              Ejemplos de productos:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {cat.examples.map((example, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                                >
+                                  {example}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
 
-            <Divider sx={{ my: 3 }} />
+                {/* Botón de acción */}
+                <button
+                  onClick={handleJoinGroup}
+                  className={`w-full bg-gradient-to-r ${
+                    categories.find((c) => c.id === selectedCategory)?.color
+                  } text-white font-bold py-4 px-8 rounded-xl transition transform hover:scale-105 shadow-lg flex items-center justify-center gap-3`}
+                >
+                  {showSuccess ? (
+                    <>
+                      <CheckCircle className="w-6 h-6" />
+                      <span>Redirigiendo al grupo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Unirme al Grupo de WhatsApp</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
-            <SectionTitle
-              icon={<Calculate color="primary" />}
-              title="Cálculo Comercial"
-            />
+        {/* Información adicional */}
+        <div className="bg-gradient-to-r from-blue-600 via-sky-600 to-blue-700 rounded-2xl p-8 text-white text-center shadow-xl">
+          <h3 className="text-2xl font-bold mb-4">¿Cómo Funciona?</h3>
+          <div className="grid md:grid-cols-4 gap-6 mt-6">
+            <div className="bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="text-3xl font-bold mb-2">1</div>
+              <p className="text-sm">Elegís tu categoría de productos</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="text-3xl font-bold mb-2">2</div>
+              <p className="text-sm">Te unís al grupo de WhatsApp</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="text-3xl font-bold mb-2">3</div>
+              <p className="text-sm">Coordinás con otros importadores</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="text-3xl font-bold mb-2">4</div>
+              <p className="text-sm">Compartís costos y ahorrás</p>
+            </div>
+          </div>
+        </div>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Unidades importadas"
-                  value={input.unidades}
-                  onChange={setField("unidades")}
-                  step={1}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Unidades vendidas/mes"
-                  value={input.unidadesMes}
-                  onChange={setField("unidadesMes")}
-                  step={1}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Multiplicador sugerido"
-                  value={input.multiplicador}
-                  onChange={setField("multiplicador")}
-                  step={0.1}
-                  note="Multiplicador sobre costo para precio de venta"
-                />
-                <ButtonGroup sx={{ mt: 1 }}>
-                  <Button onClick={() => handleMultiplierPreset(1.5)}>
-                    x1.5
-                  </Button>
-                  <Button onClick={() => handleMultiplierPreset(2)}>x2</Button>
-                  {/*  <Button onClick={() => handleMultiplierPreset(3)}>x3</Button> */}
-                </ButtonGroup>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <NumberField
-                  label="Precio venta sin IVA (manual)"
-                  value={input.precioVentaManual}
-                  onChange={setField("precioVentaManual")}
-                  note="Dejar en 0 para usar cálculo automático"
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <SectionTitle
-              icon={<Description color="primary" />}
-              title="Resumen de Costos"
-            />
-
-            <TableContainer>
-              <Table size="small">
-                <TableBody>
-                  <TableRow>
-                    <TableCell>FOB (Mercadería)</TableCell>
-                    <TableCell align="right">{formatMoney(data.fob)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Flete internacional</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.flete)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Seguro internacional</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.seguro)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>CIF (FOB + Flete + Seguro)</TableCell>
-                    <TableCell align="right">{formatMoney(data.cif)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Derecho de importación</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.derecho)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Tasa estadística</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.tasaEst)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Base para tributos</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.baseParaTributos)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>IVA importación</TableCell>
-                    <TableCell align="right">{formatMoney(data.iva)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Percepción IVA</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.percIVA)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Percepción Ganancias</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.percGan)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Percepción IIBB</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.percIIBB)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Dumping</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.dumping)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Otros gastos</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(
-                        input.digitalizacion +
-                          input.gastosOper +
-                          input.honorarios +
-                          input.certificaciones +
-                          input.tributosExtra
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow sx={{ "& td": { fontWeight: "bold" } }}>
-                    <TableCell>Total importación</TableCell>
-                    <TableCell align="right">
-                      {formatMoney(data.total)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            <Box mt={3}>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                startIcon={<CloudDownload />}
-                onClick={handleExport}
-              >
-                Exportar a CSV
-              </Button>
-            </Box>
-          </Paper>
-
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <SectionTitle
-              icon={<Calculate color="primary" />}
-              title="Comparativa Fiscal"
-            />
-
-            <List dense>
-              <ListItem>
-                <ListItemText
-                  primary="Crédito fiscal estimado"
-                  secondary={formatMoney(data.creditoRI)}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary="Costo final (Responsable Inscripto)"
-                  secondary={formatMoney(data.costoFinalRI)}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary="Costo final (Monotributo)"
-                  secondary={formatMoney(data.costoFinalMono)}
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemText
-                  primary="Costo unitario (RI)"
-                  secondary={formatMoney(data.costoUnitRI)}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary="Costo unitario (Mono)"
-                  secondary={formatMoney(data.costoUnitMono)}
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemText
-                  primary="Precio sugerido sin IVA"
-                  secondary={formatMoney(data.precioSugeridoSinIVA)}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary="Precio sugerido con IVA"
-                  secondary={formatMoney(data.precioSugeridoConIVA)}
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemText
-                  primary="Débito fiscal mensual estimado"
-                  secondary={formatMoney(data.debitoMensual)}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText
-                  primary="Meses para absorber crédito"
-                  secondary={data.mesesAbsorcion ?? "—"}
-                />
-              </ListItem>
-            </List>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      <Box mt={3}>
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography>Guía para explicar a un tercero</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" paragraph>
-              Si sos <b>Responsable Inscripto</b>, el IVA que pagás en la
-              importación es <b>crédito fiscal</b> y podés descontarlo del IVA
-              que cobrás en tus ventas (débito fiscal). Si sos{" "}
-              <b>Monotributista</b>, ese IVA no se recupera y por tanto aumenta
-              tu costo.
-            </Typography>
-
-            <Typography variant="h6">Pasos simplificados</Typography>
-            <List dense>
-              <ListItem>
-                <ListItemText primary="1. Importás y la aduana liquida: derechos, tasas, IVA, percepciones (Ganancias, IIBB), etc." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="2. Si sos RI: el IVA y percepciones de IVA son créditos que usás mes a mes. Las percepciones de Ganancias e IIBB son anticipos que se computan en Ganancias anual o IIBB mensual." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="3. Si vendés con IVA (21%), ese IVA generado (débito) se usa para absorber el crédito. Si vendés mucho, lo absorbés rápido; si vendés poco, te queda saldo a favor." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="4. Si te queda saldo a favor: podés compensarlo con otros impuestos o gestionar devolución (solo en casos y trámites específicos)." />
-              </ListItem>
-            </List>
-
-            <Typography variant="h6">Diferencias clave</Typography>
-            <TableContainer component={Paper} sx={{ mb: 2 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Concepto</TableCell>
-                    <TableCell>RI</TableCell>
-                    <TableCell>Monotributo</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>¿Recupera IVA en compra?</TableCell>
-                    <TableCell>Sí</TableCell>
-                    <TableCell>No</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Declaraciones</TableCell>
-                    <TableCell>IVA mensual, Ganancias anual</TableCell>
-                    <TableCell>Cuota mensual simplificada</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Mejor para</TableCell>
-                    <TableCell>
-                      Empresas que facturan a otras empresas
-                    </TableCell>
-                    <TableCell>
-                      Pequeños comerciantes/vendedores a consumidores
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            <Typography variant="h6">Consejos prácticos</Typography>
-            <List dense>
-              <ListItem>
-                <ListItemText primary="Confirmá NCM con el despachante porque cambia derechos." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Preguntá por valor criterio y medidas antidumping: si aplican, afectan tu costo." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Solicitá exclusión de percepciones si aplicás (reduce inmovilizado de capital)." />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Planificá ventas para generar débito fiscal y absorber crédito." />
-              </ListItem>
-            </List>
-          </AccordionDetails>
-        </Accordion>
-      </Box>
-
-      <Box mt={2}>
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography>Notas sobre Dumping y Valor Criterio</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" paragraph>
-              <b>Dumping / Antidumping:</b> si la mercadería es objeto de
-              medidas antidumping, la autoridad puede aplicar derechos
-              adicionales. Esto se traduce en un costo adicional en aduana.
-              Consultá con tu despachante para confirmar.
-            </Typography>
-            <Typography variant="body2" paragraph>
-              <b>Valor criterio:</b> la aduana puede imponer un valor criterio
-              si considera que el valor declarado es subvaluado. En ese caso, la
-              base para calcular derechos e IVA puede cambiar. Por eso en la app
-              hay un campo "Valor criterio" — si el despachante confirma un
-              valor criterio, ingresalo y la app recalcula con esa base.
-            </Typography>
-            <Typography variant="body2">
-              <b>Otras restricciones:</b> licencias no automáticas,
-              certificaciones, cupos y barreras técnicas pueden generar costos y
-              demoras. Incluí estos montos en "Tributos extra" o en
-              honorarios/certificaciones.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      </Box>
-    </Container>
+        {/* Términos y condiciones */}
+        <div className="mt-8 bg-white rounded-2xl p-6 shadow-md border border-gray-200">
+          <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-blue-600" />
+            Importante a Considerar
+          </h4>
+          <ul className="space-y-2 text-sm text-gray-700">
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>Los grupos son auto-gestionados por los miembros</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>
+                Recomendamos establecer acuerdos escritos antes de compartir
+                costos
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>
+                Verificá la reputación y trayectoria de otros importadores
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>
+                Consultá con un despachante de aduana para coordinar
+                importaciones grupales
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
   );
-}
+};
+
+export default GruposImportacionColectiva;
